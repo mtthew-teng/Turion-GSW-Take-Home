@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/internal/config"
+	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/internal/repository"
 )
 
 func main() {
@@ -12,5 +13,6 @@ func main() {
 	// Load config
 	cfg := config.LoadConfig()
 
-	log.Println(cfg)
+	// Initialize database connection
+	repo := repository.NewTelemetryRepository(cfg)
 }
