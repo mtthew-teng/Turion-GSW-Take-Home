@@ -36,3 +36,14 @@ func NewTelemetryRepository(cfg *config.DatabaseConfig) *TelemetryRepository {
 		db: db,
 	}
 }
+
+// InsertTelemetry adds a new telemetry record to the database
+func (r *TelemetryRepository) InsertTelemetry(t models.Telemetry) error {
+	result := r.db.Create(&t)
+	if result.Error != nil {
+		log.Println("Failed to insert telemetry:", result.Error)
+		return result.Error
+	}
+
+	return nil
+}
