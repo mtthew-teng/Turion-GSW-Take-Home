@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/internal/api/handlers"
 	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/internal/repository"
+	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/internal/websocket"
 )
 
 // APIServer represents the REST API server
@@ -15,10 +16,11 @@ type APIServer struct {
 	port     string
 	app      *fiber.App
 	handlers *handlers.TelemetryHandler
+	wsServer *websocket.WebSocketServer
 }
 
 // NewAPIServer creates a new API server instance
-func NewAPIServer(repo *repository.TelemetryRepository, port string) *APIServer {
+func NewAPIServer(repo *repository.TelemetryRepository, port string, wsServer *websocket.WebSocketServer) *APIServer {
 	app := fiber.New()
 	app.Use(cors.New())
 
@@ -27,6 +29,7 @@ func NewAPIServer(repo *repository.TelemetryRepository, port string) *APIServer 
 		port:     port,
 		app:      app,
 		handlers: handlers.NewTelemetryHandler(repo),
+		wsServer: wsServer,
 	}
 }
 

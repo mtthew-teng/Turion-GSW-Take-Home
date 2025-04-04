@@ -3,21 +3,24 @@ package repository
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"time"
 
 	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/internal/config"
 	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/internal/models"
+	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/internal/websocket"
 	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/pkg/dto"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type TelemetryRepository struct {
-	db *gorm.DB
+	db       *gorm.DB
+	wsServer *websocket.WebSocketServer
 }
 
 // NewTelemetryRepository creates a new repository with database connection
-func NewTelemetryRepository(cfg *config.DatabaseConfig) *TelemetryRepository {
+func NewTelemetryRepository(cfg *config.DatabaseConfig, wsServer *websocket.WebSocketServer) *TelemetryRepository {
 	// Construct DSN
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.User, cfg.Password, cfg.Name, cfg.SSLMode)
@@ -33,10 +36,31 @@ func NewTelemetryRepository(cfg *config.DatabaseConfig) *TelemetryRepository {
 		log.Fatal("Failed to migrate database schema:", err)
 	}
 
+	// Setup GORM hooks by registering callbacks
+	setupHooks(db, wsServer)
+
 	log.Println("Databse connected and migrated successfully")
 	return &TelemetryRepository{
-		db: db,
+		db:       db,
+		wsServer: wsServer,
 	}
+}
+
+// setupHooks registers GORM callbacks for telemetry events
+func setupHooks(db *gorm.DB, wsServer *websocket.WebSocketServer) {
+	// After Create hook will be called after inserting a new record
+	db.Callback().Create().After("gorm:after_create").Register("after_create_telemetry", func(tx *gorm.DB) {
+		// Only process if this is a telemetry record
+		if telemetry, ok := tx.Statement.Model.(*models.Telemetry); ok {
+			// Get the newly created record
+			if tx.Statement.ReflectValue.Kind() == reflect.Struct {
+				// Access the telemetry instance that was just created
+				// We need to broadcast this to all connected WebSocket clients
+				wsServer.BroadcastTelemetry(*telemetry)
+				log.Println("Broadcasting new telemetry data via WebSocket")
+			}
+		}
+	})
 }
 
 // InsertTelemetry adds a new telemetry record to the database

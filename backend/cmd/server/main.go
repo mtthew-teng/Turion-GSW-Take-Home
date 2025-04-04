@@ -8,16 +8,21 @@ import (
 	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/internal/config"
 	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/internal/repository"
 	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/internal/telemetry"
+	"github.com/mtthew-teng/Turion-GSW-Take-Home/backend/internal/websocket"
 )
 
 func main() {
-	log.Println("Starting Telemetry Services")
+	log.Println("Starting Telemetry Services...")
 
-	// Load config
+	// Load configuration
 	cfg := config.LoadConfig()
 
+	// Initialize WebSocket server
+	wsServer := websocket.NewWebSocketServer()
+	wsServer.Start()
+
 	// Initialize database connection
-	repo := repository.NewTelemetryRepository(cfg)
+	repo := repository.NewTelemetryRepository(cfg, wsServer)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -32,7 +37,7 @@ func main() {
 	// Start the API server
 	go func() {
 		defer wg.Done()
-		apiServer := api.NewAPIServer(repo, "3000")
+		apiServer := api.NewAPIServer(repo, "3000", wsServer)
 		apiServer.Start()
 	}()
 
