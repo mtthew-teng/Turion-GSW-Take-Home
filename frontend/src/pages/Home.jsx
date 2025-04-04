@@ -1,6 +1,10 @@
 import React from 'react'
+import useTelemetry from "../hooks/useTelemetry";
+import CurrentTelemetry from '../components/telemetry/CurrentTelemetry'
 
 const Home = () => {
+  const { telemetry, error, loading } = useTelemetry();
+
   return (
     <div className="p-4 md:p-6 space-y-6">
       {/* Page Header */}
@@ -20,7 +24,7 @@ const Home = () => {
 
         {/* Right column - Stats */}
         <div className="lg:col-span-1 space-y-6">
-          <div>Current Telemetry</div>
+        <CurrentTelemetry telemetry={telemetry} error={error} loading={loading} />
           <div>Aggregate Statistics</div>
         </div>
         
