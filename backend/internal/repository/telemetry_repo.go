@@ -110,3 +110,10 @@ func (r *TelemetryRepository) GetAggregatedTelemetry(startTime, endTime time.Tim
 	result := r.db.Raw(query, startTime, endTime).Scan(&agg)
 	return agg, result.Error
 }
+
+// GetLastTelemetry retrieves the last N telemetry records
+func (r *TelemetryRepository) GetLastTelemetry(count int) ([]models.Telemetry, error) {
+	var telemetry []models.Telemetry
+	err := r.db.Order("timestamp DESC").Limit(count).Find(&telemetry).Error
+	return telemetry, err
+}

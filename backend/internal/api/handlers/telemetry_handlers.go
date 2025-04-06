@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -80,6 +81,22 @@ func (h *TelemetryHandler) GetAggregatedTelemetry(c *fiber.Ctx) error {
 	}
 
 	data, err := h.repo.GetAggregatedTelemetry(startTime, endTime)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
+	}
+
+	return c.JSON(data)
+}
+
+// GetLastTelemetry handles requests for the last N telemetry records
+func (h *TelemetryHandler) GetLastTelemetry(c *fiber.Ctx) error {
+	countParam := c.Query("count")
+	count, err := strconv.Atoi(countParam)
+	if err != nil || count <= 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid count"})
+	}
+
+	data, err := h.repo.GetLastTelemetry(count)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
 	}
