@@ -1,4 +1,3 @@
-// src/hooks/useTelemetry.js
 import { useState, useEffect } from "react";
 import { getCurrentTelemetry, subscribeTelemetry } from "../services/telemetryService";
 import { toast } from "react-toastify";

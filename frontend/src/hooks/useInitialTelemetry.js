@@ -12,7 +12,7 @@ const useInitialTelemetry = () => {
     const fetchInitial = async () => {
       try {
         const data = await getLastTelemetry(MAX_ENTRIES);
-        setInitialData(data.reverse()); // Oldest → newest
+        setInitialData(data.reverse()); // Oldest -> newest
         setInitialLoading(false);
       } catch (err) {
         console.error("Failed to fetch initial telemetry:", err);

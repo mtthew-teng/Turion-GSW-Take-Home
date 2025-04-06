@@ -1,5 +1,6 @@
 import React from 'react'
 import useTelemetry from "../hooks/useTelemetry";
+import useInitialTelemetry from '../hooks/useInitialTelemetry';
 import CurrentTelemetry from '../components/telemetry/CurrentTelemetry'
 import TelemetryGraphMini from '../components/telemetry/TelemetryGraphMini';
 
@@ -25,6 +26,7 @@ const Home = () => {
             loading={initialLoading}
             dataKey="Temperature"
             unit="(°C)"
+            strokeColor="#F87171" 
           />
           <TelemetryGraphMini
             initialData={initialData}
@@ -33,6 +35,7 @@ const Home = () => {
             loading={initialLoading}
             dataKey="Battery"
             unit="(%)"
+            strokeColor="#60A5FA" 
           />
           <TelemetryGraphMini
             initialData={initialData}
@@ -41,6 +44,7 @@ const Home = () => {
             loading={initialLoading}
             dataKey="Altitude"
             unit="(km)"
+            strokeColor="#10B981" 
           />
           <TelemetryGraphMini
             initialData={initialData}
@@ -49,6 +53,7 @@ const Home = () => {
             loading={initialLoading}
             dataKey="Signal"
             unit="(dB)"
+            strokeColor="#FACC15"
           />
         </div>
 
