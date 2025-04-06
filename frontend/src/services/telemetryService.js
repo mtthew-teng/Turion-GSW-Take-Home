@@ -104,3 +104,20 @@ export const getCurrentTelemetry = async () => {
     return null;
   }
 };
+
+export const getLastTelemetry = async (count) => {
+  try {
+    console.log("Fetching last X telemetry from:", `${API_URL}/telemetry/last/${count}`);
+    const response = await axios.get(`${API_URL}/telemetry/last/${count}`);
+
+    if (!response.data) {
+      console.error("API returned null data");
+      return null;
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("API request failed:", error);
+    return [];
+  }
+};
