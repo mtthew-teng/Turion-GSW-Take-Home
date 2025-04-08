@@ -90,15 +90,19 @@ func (h *TelemetryHandler) GetAggregatedTelemetry(c *fiber.Ctx) error {
 
 // GetLastTelemetry handles requests for the last N telemetry records
 func (h *TelemetryHandler) GetLastTelemetry(c *fiber.Ctx) error {
-	countParam := c.Query("count")
+	countParam := c.Params("count")
 	count, err := strconv.Atoi(countParam)
 	if err != nil || count <= 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid count"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid count parameter",
+		})
 	}
 
 	data, err := h.repo.GetLastTelemetry(count)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Database error"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Database error",
+		})
 	}
 
 	return c.JSON(data)
