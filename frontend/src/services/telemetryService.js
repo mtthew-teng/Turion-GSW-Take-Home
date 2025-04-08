@@ -130,12 +130,7 @@ export const getAnomalies = async (startTime, endTime, anomalyType = "any") => {
       end_time: endTime 
     };
     
-    // Add type parameter if it's a specific anomaly type
-    if (anomalyType && anomalyType !== "any") {
-      params.type = anomalyType;
-    }
-    
-    const response = await axios.get(`${API_URL}/telemetry/anomalies`, { params });
+    const response = await axios.get(`${API_URL}/telemetry/anomalies`);
     
     if (!response.data) {
       console.error("API returned null data for anomalies");

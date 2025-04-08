@@ -4,6 +4,7 @@ import usePaginatedTelemetry from '../hooks/usePaginatedTelemetry';
 import CurrentTelemetry from '../components/telemetry/CurrentTelemetry'
 import TelemetryGraphMini from '../components/telemetry/TelemetryGraphMini';
 import TelemetryTable from "../components/telemetry/TelemetryTable";
+import OperationalStatistics from "../components/telemetry/OperationalStatistics";
 
 const Home = () => {
   const { realtimeData, realtimeError, realtimeLoading } = useTelemetry();
@@ -72,7 +73,7 @@ const Home = () => {
             error={realtimeError}
             loading={realtimeLoading}
           />
-          <div>Aggregate Statistics</div>
+          <OperationalStatistics />
         </div>
         
       </div>
