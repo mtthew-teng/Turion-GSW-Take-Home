@@ -114,7 +114,7 @@ I created a React-based telemetry dashboard that provides:
 * Anomaly notifications using toast messages
 * Filtering capabilities for data analysis
 
-The frontend connects to the backend API for historical data and uses WebSockets for real-time updates. The UI is responsive and built with Tailwind CSS. I tried out some other chart before using Recharts libraries but Recharts offered the best performance while still being visually pleasing so I ended up choosing that.
+The frontend connects to the backend API for historical data and uses WebSockets for real-time updates. The UI is responsive and built with Tailwind CSS. I tried out some other chart libraries before using Recharts but Recharts offered the best performance while still being visually pleasing so I ended up choosing that.
 
 Some Features:
 * First page of telemetry table updates in realtime unless page is changed or filter is opened.
