@@ -10,30 +10,6 @@ import {
   Legend,
 } from "recharts";
 
-// Import the anomaly constants and helper functions
-import { 
-  hasTemperatureAnomaly,
-  hasBatteryAnomaly,
-  hasAltitudeAnomaly,
-  hasSignalAnomaly
-} from "../../utils/anomalyConstants";
-
-// Set the number of entries to display in one place
-const MAX_ENTRIES = 20;
-
-// Y-Axis limits based on telemetry type
-const getDynamicDomain = (data, dataKey) => {
-  if (!data || data.length === 0) return ["auto", "auto"];
-
-  const values = data.map((entry) => entry[dataKey]).filter((v) => typeof v === "number");
-
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const padding = (max - min) * 0.1 || 1;
-
-  return [min - padding, max + padding];
-};
-
 // Custom tooltip component for consistent styling
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -52,27 +28,48 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const TelemetryGraphMini = ({ dataKey, unit, title, strokeColor, latestTelemetry, initialData }) => {
+// Y-Axis limits based on telemetry type
+const getDynamicDomain = (data, dataKey) => {
+  if (!data || data.length === 0) return ["auto", "auto"];
+
+  const values = data.map((entry) => entry[dataKey]).filter((v) => typeof v === "number");
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const padding = (max - min) * 0.1 || 1;
+
+  return [min - padding, max + padding];
+};
+
+const TelemetryGraphMini = ({ dataKey, unit, title = dataKey, strokeColor, latestTelemetry, initialData }) => {
   const [telemetryData, setTelemetryData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const MAX_ENTRIES = 20;
 
   // Set initial data when available
   useEffect(() => {
     if (initialData && initialData.length > 0) {
-      setTelemetryData(initialData);
+      // Sort by timestamp (oldest first for proper chart rendering)
+      const sortedData = [...initialData]
+        .sort((a, b) => new Date(a.Timestamp) - new Date(b.Timestamp))
+        .slice(-MAX_ENTRIES); // Only keep the most recent entries if more than MAX_ENTRIES
+      
+      setTelemetryData(sortedData);
       setIsLoading(false);
     }
   }, [initialData]);
 
-  // Push new entry to the END
+  // Push new entry to the END of the data array when new telemetry arrives
   useEffect(() => {
     if (!latestTelemetry) return;
 
     setTelemetryData((prev) => {
+      // Avoid duplicates
       if (prev.length > 0 && prev[prev.length - 1].Timestamp === latestTelemetry.Timestamp) {
-        return prev; // Avoid duplicates
+        return prev;
       }
 
+      // Add new entry and remove oldest if needed to maintain MAX_ENTRIES
       const updated = [...prev.slice(-MAX_ENTRIES + 1), latestTelemetry];
       return updated;
     });
@@ -82,19 +79,17 @@ const TelemetryGraphMini = ({ dataKey, unit, title, strokeColor, latestTelemetry
 
   // Check if this metric is in anomaly state
   const isAnomalous = () => {
-    if (!latestTelemetry || latestTelemetry.AnomalyFlags === undefined) return false;
-    
-    const flags = latestTelemetry.AnomalyFlags;
+    if (!latestTelemetry) return false;
     
     switch (dataKey) {
       case "Temperature":
-        return hasTemperatureAnomaly(flags);
+        return latestTelemetry.Temperature > 35;
       case "Battery":
-        return hasBatteryAnomaly(flags);
+        return latestTelemetry.Battery < 40;
       case "Altitude":
-        return hasAltitudeAnomaly(flags);
+        return latestTelemetry.Altitude < 400;
       case "Signal":
-        return hasSignalAnomaly(flags);
+        return latestTelemetry.Signal < -80;
       default:
         return false;
     }
@@ -168,6 +163,7 @@ const TelemetryGraphMini = ({ dataKey, unit, title, strokeColor, latestTelemetry
               activeDot={{ stroke: 'white', strokeWidth: 2, r: 4 }}
               name={title}
               isAnimationActive={false}
+              unit={unit.replace(/[()]/g, '')} // Remove parentheses from unit for tooltip
             />
           </LineChart>
         </ResponsiveContainer>

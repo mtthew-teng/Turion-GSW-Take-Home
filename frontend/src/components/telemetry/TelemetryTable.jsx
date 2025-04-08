@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import usePaginatedTelemetry from "../../hooks/usePaginatedTelemetry";
 import { FiFilter, FiWifi } from "react-icons/fi";
 import FilterPanel from "./FilterPanel";
 import TablePagination from "./TablePagination";
@@ -12,30 +11,30 @@ const TableHeader = ({ children }) => (
   </th>
 );
 
-const TelemetryTable = () => {
-  const {
-    data,
-    page,
-    total,
-    totalPages,
-    loading,
-    setPage,
-    filters,
-    updateFilters,
-    refreshData,
-    setPauseUpdates,
-    isRealtimeActive
-  } = usePaginatedTelemetry(1, 20);
-
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState(Date.now());
+const TelemetryTable = ({ paginatedTelemetryHook }) => {
+    const {
+      paginatedData,
+      page,
+      total,
+      totalPages,
+      paginatedLoading,
+      setPage,
+      filters,
+      updateFilters,
+      refreshData,
+      setPauseUpdates,
+      isRealtimeActive
+    } = paginatedTelemetryHook();
+  
+    const [filterOpen, setFilterOpen] = useState(false);
+    const [lastUpdate, setLastUpdate] = useState(Date.now());
   
   // Track when data is updated
   useEffect(() => {
-    if (data.length > 0) {
+    if (paginatedData.length > 0) {
       setLastUpdate(Date.now());
     }
-  }, [data]);
+  }, [paginatedData]);
 
   // Pause real-time updates when filter panel is open
   useEffect(() => {
@@ -99,7 +98,7 @@ const TelemetryTable = () => {
 
       {/* Table Container with loading overlay */}
       <div className="relative overflow-x-auto">
-        {loading && (
+        {paginatedLoading && (
           <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
             <div className="flex flex-col items-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
@@ -117,14 +116,14 @@ const TelemetryTable = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {data.length === 0 ? (
+            {paginatedData.length === 0 ? (
               <tr>
                 <td colSpan="5" className="px-6 py-4 text-center text-gray-500">
-                  {loading ? "Loading data..." : "No telemetry data found."}
+                  {paginatedLoading ? "Loading data..." : "No telemetry data found."}
                 </td>
               </tr>
             ) : (
-              data.map((item, index) => (
+                paginatedData.map((item, index) => (
                 <TelemetryTableRow 
                   key={item.ID || `${item.Timestamp}-${index}`}
                   item={item}
@@ -141,7 +140,7 @@ const TelemetryTable = () => {
         page={page}
         totalPages={totalPages}
         total={total}
-        dataLength={data.length}
+        dataLength={paginatedData.length}
         setPage={handlePageChange}
       />
     </div>

@@ -43,7 +43,6 @@ func (s *APIServer) Start() {
 	api.Get("/telemetry/current", s.handlers.GetCurrentTelemetry)
 	api.Get("/telemetry/anomalies", s.handlers.GetAnomalies)
 	api.Get("/telemetry/aggregate", s.handlers.GetAggregatedTelemetry)
-	api.Get("/telemetry/last/:count", s.handlers.GetLastTelemetry)
 	api.Get("/telemetry/paginated", s.handlers.GetPaginatedTelemetry)
 
 	// Setup WebSocket routes

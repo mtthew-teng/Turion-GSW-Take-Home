@@ -10,9 +10,9 @@ import {
 } from "../utils/anomalyConstants";
 
 const useTelemetry = () => {
-  const [telemetry, setTelemetry] = useState(null);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [realtimeData, setRealtimeData] = useState(null);
+  const [realtimeError, setRealtimeError] = useState(null);
+  const [realtimeLoading, setRealtimeLoading] = useState(true);
 
   useEffect(() => {
     // First, get the current telemetry
@@ -27,12 +27,12 @@ const useTelemetry = () => {
         // Check for anomalies and trigger notifications
         checkForAnomalies(data);
 
-        setTelemetry(data);
-        setLoading(false);
+        setRealtimeData(data);
+        setRealtimeLoading(false);
       } catch (err) {
         console.error("Error fetching initial telemetry:", err);
-        setError(err.message);
-        setLoading(false);
+        setRealtimeError(err.message);
+        setRealtimeLoading(false);
       }
     };
 
@@ -40,7 +40,7 @@ const useTelemetry = () => {
 
     // Then, subscribe to WebSocket updates
     const unsubscribe = subscribeTelemetry((newTelemetry) => {
-      setTelemetry(newTelemetry);
+      setRealtimeData(newTelemetry);
       checkForAnomalies(newTelemetry);
     });
 
@@ -71,7 +71,7 @@ const useTelemetry = () => {
     }
   };
 
-  return { telemetry, error, loading };
+  return { realtimeData, realtimeError, realtimeLoading };
 };
 
 export default useTelemetry;

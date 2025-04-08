@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { getPaginatedTelemetry, subscribeTelemetry } from "../services/telemetryService";
 
 const usePaginatedTelemetry = (initialPage = 1, limit = 20, refreshInterval = 1000) => {
-  const [data, setData] = useState([]);
+  const [paginatedData, setPaginatedData] = useState([]);
   const [page, setPage] = useState(initialPage);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [paginatedLoading, setPaginatedLoading] = useState(true);
+  const [paginatedError, setPaginatedError] = useState(null);
   const [filters, setFilters] = useState({
     startTime: null,
     endTime: null,
@@ -18,7 +18,7 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20, refreshInterval = 10
 
   const fetchData = useCallback(async (pageToFetch = page) => {
     try {
-      setLoading(true);
+        setPaginatedLoading(true);
       const params = { page: pageToFetch, limit };
       
       // Add time filters if present
@@ -42,15 +42,15 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20, refreshInterval = 10
         throw new Error("API returned invalid data");
       }
 
-      setData(res.data);
+      setPaginatedData(res.data);
       setTotal(res.total);
       setTotalPages(res.total_pages || 1); // Ensure we have at least 1 page
-      setError(null);
+      setPaginatedError(null);
     } catch (err) {
       console.error("Error fetching paginated telemetry:", err);
-      setError(err.message);
+      setPaginatedError(err.message);
     } finally {
-      setLoading(false);
+        setPaginatedLoading(false);
     }
   }, [page, limit, filters]);
 
@@ -105,7 +105,7 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20, refreshInterval = 10
           }
             
           if (shouldInclude) {
-            setData(prevData => {
+            setPaginatedData(prevData => {
               // Create a new array with the new telemetry at the beginning
               const updatedData = [newTelemetry, ...prevData.slice(0, limit - 1)];
               return updatedData;
@@ -156,12 +156,12 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20, refreshInterval = 10
   const isRealtimeActive = page === 1 && !filters.startTime && !filters.endTime && !pauseRealtimeUpdates;
 
   return {
-    data,
+    paginatedData,
     page,
     total,
     totalPages,
-    loading,
-    error,
+    paginatedLoading,
+    paginatedError,
     setPage,
     filters,
     updateFilters,

@@ -111,13 +111,6 @@ func (r *TelemetryRepository) GetAggregatedTelemetry(startTime, endTime time.Tim
 	return agg, result.Error
 }
 
-// GetLastTelemetry retrieves the last N telemetry records
-func (r *TelemetryRepository) GetLastTelemetry(count int) ([]models.Telemetry, error) {
-	var telemetry []models.Telemetry
-	err := r.db.Order("timestamp DESC").Limit(count).Find(&telemetry).Error
-	return telemetry, err
-}
-
 // GetPaginatedTelemetry retrieves telemetry data with pagination and optional anomaly filtering
 func (r *TelemetryRepository) GetPaginatedTelemetry(page, limit int, startTime, endTime *time.Time, anomalyFilter *bool, anomalyType string) ([]models.Telemetry, int64, error) {
 	var telemetry []models.Telemetry

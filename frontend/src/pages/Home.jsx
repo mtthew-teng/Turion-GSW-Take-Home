@@ -1,13 +1,20 @@
-import React from 'react'
+import React from "react";
 import useTelemetry from "../hooks/useTelemetry";
-import useInitialTelemetry from '../hooks/useInitialTelemetry';
+import usePaginatedTelemetry from '../hooks/usePaginatedTelemetry';
 import CurrentTelemetry from '../components/telemetry/CurrentTelemetry'
 import TelemetryGraphMini from '../components/telemetry/TelemetryGraphMini';
 import TelemetryTable from "../components/telemetry/TelemetryTable";
 
 const Home = () => {
-  const { telemetry, error, loading } = useTelemetry();
-  const { initialData, initialLoading, initialError } = useInitialTelemetry();
+  const { realtimeData, realtimeError, realtimeLoading } = useTelemetry();
+  const {
+      paginatedData,
+      page,
+      total,
+      totalPages,
+      paginatedLoading,
+      paginatedError,
+    } = usePaginatedTelemetry(1, 20);
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -21,37 +28,37 @@ const Home = () => {
         {/* Left column - Graphs */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
           <TelemetryGraphMini
-            initialData={initialData}
-            latestTelemetry={telemetry}
-            error={initialError}
-            loading={initialLoading}
+            initialData={paginatedData}
+            latestTelemetry={realtimeData}
+            error={paginatedError}
+            loading={paginatedLoading}
             dataKey="Temperature"
             unit="(°C)"
             strokeColor="#F87171" 
           />
           <TelemetryGraphMini
-            initialData={initialData}
-            latestTelemetry={telemetry}
-            error={initialError}
-            loading={initialLoading}
+            initialData={paginatedData}
+            latestTelemetry={realtimeData}
+            error={paginatedError}
+            loading={paginatedLoading}
             dataKey="Battery"
             unit="(%)"
             strokeColor="#60A5FA" 
           />
           <TelemetryGraphMini
-            initialData={initialData}
-            latestTelemetry={telemetry}
-            error={initialError}
-            loading={initialLoading}
+            initialData={paginatedData}
+            latestTelemetry={realtimeData}
+            error={paginatedError}
+            loading={paginatedLoading}
             dataKey="Altitude"
             unit="(km)"
             strokeColor="#10B981" 
           />
           <TelemetryGraphMini
-            initialData={initialData}
-            latestTelemetry={telemetry}
-            error={initialError}
-            loading={initialLoading}
+            initialData={paginatedData}
+            latestTelemetry={realtimeData}
+            error={paginatedError}
+            loading={paginatedLoading}
             dataKey="Signal"
             unit="(dB)"
             strokeColor="#FACC15"
@@ -61,9 +68,9 @@ const Home = () => {
         {/* Right column - Stats */}
         <div className="lg:col-span-1 space-y-6">
           <CurrentTelemetry
-            telemetry={telemetry}
-            error={error}
-            loading={loading}
+            telemetry={realtimeData}
+            error={realtimeError}
+            loading={realtimeLoading}
           />
           <div>Aggregate Statistics</div>
         </div>
@@ -75,7 +82,7 @@ const Home = () => {
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">Telemetry History</h2>
         </div>
-        <TelemetryTable />
+        <TelemetryTable paginatedTelemetryHook={usePaginatedTelemetry}/>
       </div>
     </div>
   )
