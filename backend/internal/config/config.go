@@ -24,10 +24,10 @@ func LoadConfig() *DatabaseConfig {
 	}
 
 	return &DatabaseConfig{
-		Host:     getEnv("DB_HORT", "localhost"),
+		Host:     getEnv("DB_HOST", "postgres"),
 		Port:     getEnv("DB_PORT", "5432"),
 		User:     getEnv("DB_USER", "postgres"),
-		Password: getEnv("DB_PASSWORD", ""),
+		Password: getEnv("DB_PASSWORD", "postgres"),
 		Name:     getEnv("DB_NAME", "turion_gsw_take_home"),
 		SSLMode:  getEnv("SSL_MODE", "disable"),
 	}

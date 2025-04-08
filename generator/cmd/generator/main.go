@@ -40,7 +40,7 @@ const (
 )
 
 func main() {
-	conn, err := net.Dial("udp", "localhost:8089")
+	conn, err := net.Dial("udp", "backend:8089")
 	if err != nil {
 		log.Fatal(err)
 	}
