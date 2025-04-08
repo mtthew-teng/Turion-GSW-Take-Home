@@ -15,3 +15,12 @@ type AggregatedTelemetry struct {
 	MaxSignal      float32 `json:"max_signal"`
 	AvgSignal      float32 `json:"avg_signal"`
 }
+
+// PaginatedResponse is a wrapper for paginated data
+type PaginatedResponse struct {
+	Data       interface{} `json:"data"`
+	Page       int         `json:"page"`
+	Limit      int         `json:"limit"`
+	Total      int64       `json:"total"`
+	TotalPages int64       `json:"total_pages"`
+}

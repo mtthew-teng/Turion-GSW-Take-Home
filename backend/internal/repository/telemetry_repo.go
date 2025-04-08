@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"log"
+	"math"
 	"reflect"
 	"time"
 
@@ -116,4 +117,52 @@ func (r *TelemetryRepository) GetLastTelemetry(count int) ([]models.Telemetry, e
 	var telemetry []models.Telemetry
 	err := r.db.Order("timestamp DESC").Limit(count).Find(&telemetry).Error
 	return telemetry, err
+}
+
+// GetPaginatedTelemetry retrieves telemetry data with pagination and optional anomaly filtering
+func (r *TelemetryRepository) GetPaginatedTelemetry(page, limit int, startTime, endTime *time.Time, anomalyFilter *bool) (dto.PaginatedResponse, error) {
+	var telemetry []models.Telemetry
+	var total int64
+	var response dto.PaginatedResponse
+
+	db := r.db.Model(&models.Telemetry{})
+
+	// Apply time filters if provided
+	if startTime != nil && endTime != nil {
+		db = db.Where("timestamp BETWEEN ? AND ?", *startTime, *endTime)
+	} else if startTime != nil {
+		db = db.Where("timestamp >= ?", *startTime)
+	} else if endTime != nil {
+		db = db.Where("timestamp <= ?", *endTime)
+	}
+
+	// Apply anomaly filter if provided
+	if anomalyFilter != nil {
+		db = db.Where("anomaly = ?", *anomalyFilter)
+	}
+
+	// Count total matching records
+	if err := db.Count(&total).Error; err != nil {
+		return response, err
+	}
+
+	// Apply pagination
+	offset := (page - 1) * limit
+	if err := db.Order("timestamp DESC").Limit(limit).Offset(offset).Find(&telemetry).Error; err != nil {
+		return response, err
+	}
+
+	// Calculate total pages
+	totalPages := int64(math.Ceil(float64(total) / float64(limit)))
+
+	// Populate response DTO
+	response = dto.PaginatedResponse{
+		Data:       telemetry,
+		Page:       page,
+		Limit:      limit,
+		Total:      total,
+		TotalPages: totalPages,
+	}
+
+	return response, nil
 }

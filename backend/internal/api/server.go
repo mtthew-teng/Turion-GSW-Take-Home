@@ -43,6 +43,11 @@ func (s *APIServer) Start() {
 	api.Get("/telemetry/current", s.handlers.GetCurrentTelemetry)
 	api.Get("/telemetry/anomalies", s.handlers.GetAnomalies)
 	api.Get("/telemetry/aggregate", s.handlers.GetAggregatedTelemetry)
+	api.Get("/telemetry/aggregate", s.handlers.GetPaginatedTelemetry)
+
+	// Setup WebSocket routes
+	s.wsServer.HandleWebSocket(s.app)
 
 	log.Printf("Fiber API running on http://localhost:%s", s.port)
+	log.Fatal(s.app.Listen(":" + s.port))
 }

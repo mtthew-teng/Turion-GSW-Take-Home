@@ -103,3 +103,56 @@ func (h *TelemetryHandler) GetLastTelemetry(c *fiber.Ctx) error {
 
 	return c.JSON(data)
 }
+
+// GetPaginatedTelemetry handles requests for paginated telemetry data
+func (h *TelemetryHandler) GetPaginatedTelemetry(c *fiber.Ctx) error {
+	page, err := strconv.Atoi(c.Query("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	limit, err := strconv.Atoi(c.Query("limit", "10"))
+	if err != nil || limit < 1 {
+		limit = 20
+	}
+
+	// Optional time filters
+	var startTime, endTime *time.Time
+
+	if s := c.Query("start_time"); s != "" {
+		t, err := time.Parse(time.RFC3339, s)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid start_time"})
+		}
+		startTime = &t
+	}
+
+	if e := c.Query("end_time"); e != "" {
+		t, err := time.Parse(time.RFC3339, e)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid end_time"})
+		}
+		endTime = &t
+	}
+
+	// Optional anomaly filter
+	var anomalyFilter *bool
+	if a := c.Query("anomaly"); a != "" {
+		if a == "true" {
+			t := true
+			anomalyFilter = &t
+		} else if a == "false" {
+			f := false
+			anomalyFilter = &f
+		}
+	}
+
+	response, err := h.repo.GetPaginatedTelemetry(page, limit, startTime, endTime, anomalyFilter)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "Could not fetch telemetry data",
+		})
+	}
+
+	return c.JSON(response)
+}
