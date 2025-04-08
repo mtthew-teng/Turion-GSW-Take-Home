@@ -10,6 +10,15 @@ import {
   Legend,
 } from "recharts";
 
+// Import the anomaly constants and helper functions
+import { 
+  hasTemperatureAnomaly,
+  hasBatteryAnomaly,
+  hasAltitudeAnomaly,
+  hasSignalAnomaly
+} from "../../utils/anomalyConstants";
+
+// Set the number of entries to display in one place
 const MAX_ENTRIES = 20;
 
 // Y-Axis limits based on telemetry type
@@ -43,18 +52,9 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const TelemetryGraphMini = ({ initialData, latestTelemetry, loading, error, dataKey, unit, title = dataKey, strokeColor }) => {
+const TelemetryGraphMini = ({ dataKey, unit, title, strokeColor, latestTelemetry, initialData }) => {
   const [telemetryData, setTelemetryData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState(error);
-
-  useEffect(() => {
-    setIsLoading(loading);
-  }, [loading]);
-
-  useEffect(() => {
-    setErrorMessage(error);
-  }, [error]);
 
   // Set initial data when available
   useEffect(() => {
@@ -82,17 +82,19 @@ const TelemetryGraphMini = ({ initialData, latestTelemetry, loading, error, data
 
   // Check if this metric is in anomaly state
   const isAnomalous = () => {
-    if (!latestTelemetry || typeof latestTelemetry.AnomalyFlags !== 'number') return false;
+    if (!latestTelemetry || latestTelemetry.AnomalyFlags === undefined) return false;
+    
+    const flags = latestTelemetry.AnomalyFlags;
     
     switch (dataKey) {
       case "Temperature":
-        return (latestTelemetry.AnomalyFlags & TEMPERATURE_ANOMALY) !== 0;
+        return hasTemperatureAnomaly(flags);
       case "Battery":
-        return (latestTelemetry.AnomalyFlags & BATTERY_ANOMALY) !== 0;
+        return hasBatteryAnomaly(flags);
       case "Altitude":
-        return (latestTelemetry.AnomalyFlags & ALTITUDE_ANOMALY) !== 0;
+        return hasAltitudeAnomaly(flags);
       case "Signal":
-        return (latestTelemetry.AnomalyFlags & SIGNAL_ANOMALY) !== 0;
+        return hasSignalAnomaly(flags);
       default:
         return false;
     }
@@ -119,14 +121,6 @@ const TelemetryGraphMini = ({ initialData, latestTelemetry, loading, error, data
             <div className="flex flex-col items-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
               <span className="mt-2 text-sm text-gray-500">Loading...</span>
-            </div>
-          </div>
-        )}
-        
-        {errorMessage && (
-          <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
-            <div className="p-4 bg-red-50 rounded-lg text-center">
-              <p className="text-red-500 text-sm">{errorMessage}</p>
             </div>
           </div>
         )}
@@ -179,7 +173,7 @@ const TelemetryGraphMini = ({ initialData, latestTelemetry, loading, error, data
         </ResponsiveContainer>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TelemetryGraphMini
+export default TelemetryGraphMini;

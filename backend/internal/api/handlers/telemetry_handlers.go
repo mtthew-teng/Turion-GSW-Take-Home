@@ -151,12 +151,26 @@ func (h *TelemetryHandler) GetPaginatedTelemetry(c *fiber.Ctx) error {
 		}
 	}
 
-	response, err := h.repo.GetPaginatedTelemetry(page, limit, startTime, endTime, anomalyFilter)
+	// Get anomaly type filter (if any)
+	anomalyType := c.Query("anomaly_type", "")
+
+	// Get data from repository
+	data, total, err := h.repo.GetPaginatedTelemetry(page, limit, startTime, endTime, anomalyFilter, anomalyType)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"error": "Could not fetch telemetry data",
 		})
 	}
 
-	return c.JSON(response)
+	// Calculate total pages
+	totalPages := (total + int64(limit) - 1) / int64(limit)
+
+	// Return formatted response
+	return c.JSON(fiber.Map{
+		"data":        data,
+		"page":        page,
+		"limit":       limit,
+		"total":       total,
+		"total_pages": totalPages,
+	})
 }

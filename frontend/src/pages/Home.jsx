@@ -3,6 +3,7 @@ import useTelemetry from "../hooks/useTelemetry";
 import useInitialTelemetry from '../hooks/useInitialTelemetry';
 import CurrentTelemetry from '../components/telemetry/CurrentTelemetry'
 import TelemetryGraphMini from '../components/telemetry/TelemetryGraphMini';
+import TelemetryTable from "../components/telemetry/TelemetryTable";
 
 const Home = () => {
   const { telemetry, error, loading } = useTelemetry();
@@ -74,7 +75,7 @@ const Home = () => {
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">Telemetry History</h2>
         </div>
-        <div>Table</div>
+        <TelemetryTable />
       </div>
     </div>
   )

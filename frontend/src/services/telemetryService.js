@@ -121,3 +121,59 @@ export const getLastTelemetry = async (count) => {
     return [];
   }
 };
+
+export const getAggregatedTelemetry = async (startTime, endTime) => {
+  try {
+    const response = await axios.get(`${API_URL}/telemetry/aggregate`, {
+      params: { start_time: startTime, end_time: endTime },
+    });
+
+    if (!response.data) {
+      console.error("API returned null data for aggregation");
+      return null;
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("API aggregation request failed:", error);
+    return null;
+  }
+};
+
+export const getAnomalies = async (startTime, endTime, anomalyType = "any") => {
+  try {
+    const params = { 
+      start_time: startTime, 
+      end_time: endTime 
+    };
+    
+    // Add type parameter if it's a specific anomaly type
+    if (anomalyType && anomalyType !== "any") {
+      params.type = anomalyType;
+    }
+    
+    const response = await axios.get(`${API_URL}/telemetry/anomalies`, { params });
+    
+    if (!response.data) {
+      console.error("API returned null data for anomalies");
+      return null;
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("API anomalies request failed:", error);
+    return null;
+  }
+};
+
+export const getPaginatedTelemetry = async (params = {}) => {
+  try {
+    console.log("Fetching paginated telemetry with params:", params);
+    const response = await axios.get(`${API_URL}/telemetry/paginated`, { params });
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("API paginated request failed:", error);
+    throw error;
+  }
+};

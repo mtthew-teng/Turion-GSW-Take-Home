@@ -3,7 +3,6 @@ package repository
 import (
 	"fmt"
 	"log"
-	"math"
 	"reflect"
 	"time"
 
@@ -120,10 +119,9 @@ func (r *TelemetryRepository) GetLastTelemetry(count int) ([]models.Telemetry, e
 }
 
 // GetPaginatedTelemetry retrieves telemetry data with pagination and optional anomaly filtering
-func (r *TelemetryRepository) GetPaginatedTelemetry(page, limit int, startTime, endTime *time.Time, anomalyFilter *bool) (dto.PaginatedResponse, error) {
+func (r *TelemetryRepository) GetPaginatedTelemetry(page, limit int, startTime, endTime *time.Time, anomalyFilter *bool, anomalyType string) ([]models.Telemetry, int64, error) {
 	var telemetry []models.Telemetry
 	var total int64
-	var response dto.PaginatedResponse
 
 	db := r.db.Model(&models.Telemetry{})
 
@@ -138,31 +136,42 @@ func (r *TelemetryRepository) GetPaginatedTelemetry(page, limit int, startTime, 
 
 	// Apply anomaly filter if provided
 	if anomalyFilter != nil {
-		db = db.Where("anomaly = ?", *anomalyFilter)
+		if *anomalyFilter {
+			if anomalyType != "" && anomalyType != "any" {
+				// Filter by specific anomaly type
+				switch anomalyType {
+				case "temperature":
+					db = db.Where("anomaly_flags & ? > 0", models.TemperatureAnomaly)
+				case "battery":
+					db = db.Where("anomaly_flags & ? > 0", models.BatteryAnomaly)
+				case "altitude":
+					db = db.Where("anomaly_flags & ? > 0", models.AltitudeAnomaly)
+				case "signal":
+					db = db.Where("anomaly_flags & ? > 0", models.SignalAnomaly)
+				default:
+					// Default to any anomaly if type is unrecognized
+					db = db.Where("anomaly_flags > 0")
+				}
+			} else {
+				// If true and no specific type, select records with any anomaly flag set
+				db = db.Where("anomaly_flags > 0")
+			}
+		} else {
+			// If false, select records with no anomaly flags set
+			db = db.Where("anomaly_flags = 0")
+		}
 	}
 
 	// Count total matching records
 	if err := db.Count(&total).Error; err != nil {
-		return response, err
+		return nil, 0, err
 	}
 
 	// Apply pagination
 	offset := (page - 1) * limit
 	if err := db.Order("timestamp DESC").Limit(limit).Offset(offset).Find(&telemetry).Error; err != nil {
-		return response, err
+		return nil, 0, err
 	}
 
-	// Calculate total pages
-	totalPages := int64(math.Ceil(float64(total) / float64(limit)))
-
-	// Populate response DTO
-	response = dto.PaginatedResponse{
-		Data:       telemetry,
-		Page:       page,
-		Limit:      limit,
-		Total:      total,
-		TotalPages: totalPages,
-	}
-
-	return response, nil
+	return telemetry, total, nil
 }
