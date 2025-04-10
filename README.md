@@ -94,7 +94,7 @@ Key features:
 The code for this can be found in backend/internal/telemetry/.
 
 ### Part 2: Telemetry API Service
-I implemented a REST API using the Fiber web framework for Go. The API provides endpoints for querying historical telemetry data with time range filtering, aggregating metrics, and retrieving current satellite status. Originally I had another endpoint /api/v1/telemetry/:count which I used to populate the graphs and tables with an initial set of data, but I realized this could be done by fetching one page using the paginated endpoint for the table instead.
+I implemented a REST API using the Fiber web framework for Go. The API provides endpoints for querying historical telemetry data with time range filtering, aggregating metrics, and retrieving current satellite status. Originally I had another endpoint /api/v1/telemetry/last/:count which I used to populate the graphs and tables with an initial set of data, but I realized this could be done by fetching one page using the paginated endpoint for the table instead.
 
 API Endpoints:
 
