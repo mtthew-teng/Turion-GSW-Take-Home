@@ -10,8 +10,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout/>}>
           <Route index element={<Home/>}/>
-          <Route path="table" element={<Table/>}/>
-          <Route path="graph" element={<Graph/>}/>
+          {/* <Route path="table" element={<Table/>}/>
+          <Route path="graph" element={<Graph/>}/> */}
         </Route>
       </Routes>
     </BrowserRouter>
