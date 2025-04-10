@@ -48,6 +48,17 @@ const TelemetryTable = ({ paginatedTelemetryHook }) => {
     setPage(newPage);
   };
 
+  // Toggle filter panel and refresh data when closing
+  const toggleFilterPanel = () => {
+    const newState = !filterOpen;
+    setFilterOpen(newState);
+    
+    // If we're closing the filter panel, refresh the data
+    if (filterOpen === true && newState === false) {
+      refreshData(page);
+    }
+  };
+
   return (
     <div className="bg-white divide-y divide-gray-200 rounded-xl shadow-md">
       {/* Header bar with controls */}
@@ -80,7 +91,7 @@ const TelemetryTable = ({ paginatedTelemetryHook }) => {
         </div>
         
         <button
-          onClick={() => setFilterOpen(!filterOpen)}
+          onClick={toggleFilterPanel}
           className="flex items-center space-x-1 text-sm text-gray-700 hover:text-indigo-600"
         >
           <FiFilter />
