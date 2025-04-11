@@ -25,9 +25,9 @@ const Home = () => {
       </div>
 
       {/* Main Dashboard Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6">
         {/* Left column - Graphs */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
+        <div className="2xl:col-span-2 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-2 gap-6 auto-rows-fr">
           <TelemetryGraphMini
             initialData={paginatedData}
             latestTelemetry={realtimeData}
@@ -67,7 +67,7 @@ const Home = () => {
         </div>
 
         {/* Right column - Stats */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="2xl:col-span-1 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-1 gap-6">
           <CurrentTelemetry
             telemetry={realtimeData}
             error={realtimeError}
