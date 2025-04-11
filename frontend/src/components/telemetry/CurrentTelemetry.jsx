@@ -36,7 +36,7 @@ const CurrentTelemetry = ({ telemetry, error, loading }) => {
           <p className="text-red-500 font-medium">{error}</p>
         </div>
       ) : telemetry ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8 flex-grow">
+        <div className="grid grid-cols-2 gap-6 md:gap-8 flex-grow">
           <TelemetryItem 
             icon={<FaTemperatureHalf />} 
             label="Temperature" 
