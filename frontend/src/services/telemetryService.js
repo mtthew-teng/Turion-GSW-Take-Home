@@ -123,7 +123,7 @@ export const getAggregatedTelemetry = async (startTime, endTime) => {
   }
 };
 
-export const getAnomalies = async (startTime, endTime, anomalyType = "any") => {
+export const getAnomalies = async (startTime, endTime) => {
   try {
     const params = { 
       start_time: startTime, 

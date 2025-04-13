@@ -1,4 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { 
+  hasTemperatureAnomaly, 
+  hasBatteryAnomaly, 
+  hasAltitudeAnomaly, 
+  hasSignalAnomaly 
+} from "../../utils/anomalyConstants";
 import {
   LineChart,
   Line,
@@ -79,17 +85,17 @@ const TelemetryGraphMini = ({ dataKey, unit, title = dataKey, strokeColor, lates
 
   // Check if this metric is in anomaly state
   const isAnomalous = () => {
-    if (!latestTelemetry) return false;
+    if (!latestTelemetry || latestTelemetry.AnomalyFlags === undefined) return false;
     
     switch (dataKey) {
       case "Temperature":
-        return latestTelemetry.Temperature > 35;
+        return hasTemperatureAnomaly(latestTelemetry.AnomalyFlags);
       case "Battery":
-        return latestTelemetry.Battery < 40;
+        return hasBatteryAnomaly(latestTelemetry.AnomalyFlags);
       case "Altitude":
-        return latestTelemetry.Altitude < 400;
+        return hasAltitudeAnomaly(latestTelemetry.AnomalyFlags);
       case "Signal":
-        return latestTelemetry.Signal < -80;
+        return hasSignalAnomaly(latestTelemetry.AnomalyFlags);
       default:
         return false;
     }

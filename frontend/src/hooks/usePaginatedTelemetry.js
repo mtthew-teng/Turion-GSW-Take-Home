@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getPaginatedTelemetry, subscribeTelemetry } from "../services/telemetryService";
 
-const usePaginatedTelemetry = (initialPage = 1, limit = 20, refreshInterval = 1000) => {
+const usePaginatedTelemetry = (initialPage = 1, limit = 20) => {
   const [paginatedData, setPaginatedData] = useState([]);
   const [page, setPage] = useState(initialPage);
   const [total, setTotal] = useState(0);
