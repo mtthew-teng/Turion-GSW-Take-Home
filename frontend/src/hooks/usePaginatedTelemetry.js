@@ -1,5 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { getPaginatedTelemetry, subscribeTelemetry } from "../services/telemetryService";
+import { 
+  hasTemperatureAnomaly, 
+  hasBatteryAnomaly, 
+  hasAltitudeAnomaly, 
+  hasSignalAnomaly 
+} from "../utils/anomalyConstants";
 
 const usePaginatedTelemetry = (initialPage = 1, limit = 20) => {
   const [paginatedData, setPaginatedData] = useState([]);
@@ -18,11 +24,8 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20) => {
 
   // Determine if real-time updates should be active
   const isRealtimeActive = useCallback(() => {
-    return page === 1 && 
-           !filters.startTime && 
-           !filters.endTime && 
-           !pauseRealtimeUpdates;
-  }, [page, filters.startTime, filters.endTime, pauseRealtimeUpdates]);
+    return page === 1 && !pauseRealtimeUpdates;
+  }, [page, pauseRealtimeUpdates]);
 
   const fetchData = useCallback(async (pageToFetch = page) => {
     try {
@@ -76,7 +79,8 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20) => {
       let shouldInclude = true;
       
       if (filters.anomaly !== null) {
-        const hasAnomaly = newTelemetry.AnomalyFlags > 0;
+        // Check if the telemetry has any anomaly flags set
+        const hasAnyAnomaly = newTelemetry.AnomalyFlags > 0;
         
         if (filters.anomaly === true) {
           // We want items with anomalies
@@ -84,27 +88,27 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20) => {
             // Filter by specific anomaly type
             switch (filters.anomalyType) {
               case 'temperature':
-                shouldInclude = (newTelemetry.AnomalyFlags & 1) !== 0;
+                shouldInclude = hasTemperatureAnomaly(newTelemetry.AnomalyFlags);
                 break;
               case 'battery':
-                shouldInclude = (newTelemetry.AnomalyFlags & 2) !== 0;
+                shouldInclude = hasBatteryAnomaly(newTelemetry.AnomalyFlags);
                 break;
               case 'altitude':
-                shouldInclude = (newTelemetry.AnomalyFlags & 4) !== 0;
+                shouldInclude = hasAltitudeAnomaly(newTelemetry.AnomalyFlags);
                 break;
               case 'signal':
-                shouldInclude = (newTelemetry.AnomalyFlags & 8) !== 0;
+                shouldInclude = hasSignalAnomaly(newTelemetry.AnomalyFlags);
                 break;
               default:
-                shouldInclude = hasAnomaly;
+                shouldInclude = hasAnyAnomaly;
             }
           } else {
             // Any anomaly
-            shouldInclude = hasAnomaly;
+            shouldInclude = hasAnyAnomaly;
           }
         } else {
           // We want items WITHOUT anomalies
-          shouldInclude = !hasAnomaly;
+          shouldInclude = !hasAnyAnomaly;
         }
       }
         
@@ -140,21 +144,6 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20) => {
       ...newFilters
     }));
   }, []);
-
-  // Effects to pause real-time updates when certain conditions change
-  useEffect(() => {
-    // Automatically pause updates when not on page 1
-    if (page !== 1) {
-      setPauseRealtimeUpdates(true);
-    }
-  }, [page]);
-
-  useEffect(() => {
-    // Pause updates when time filters are active
-    if (filters.startTime || filters.endTime) {
-      setPauseRealtimeUpdates(true);
-    }
-  }, [filters.startTime, filters.endTime]);
 
   return {
     paginatedData,
