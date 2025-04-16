@@ -16,9 +16,17 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20) => {
   });
   const [pauseRealtimeUpdates, setPauseRealtimeUpdates] = useState(false);
 
+  // Determine if real-time updates should be active
+  const isRealtimeActive = useCallback(() => {
+    return page === 1 && 
+           !filters.startTime && 
+           !filters.endTime && 
+           !pauseRealtimeUpdates;
+  }, [page, filters.startTime, filters.endTime, pauseRealtimeUpdates]);
+
   const fetchData = useCallback(async (pageToFetch = page) => {
     try {
-        setPaginatedLoading(true);
+      setPaginatedLoading(true);
       const params = { page: pageToFetch, limit };
       
       // Add time filters if present
@@ -35,7 +43,6 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20) => {
         params.anomaly_type = filters.anomalyType;
       }
 
-      console.log("Fetching page", pageToFetch, "with params:", params);
       const res = await getPaginatedTelemetry(params);
 
       if (!res || !Array.isArray(res.data)) {
@@ -44,13 +51,13 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20) => {
 
       setPaginatedData(res.data);
       setTotal(res.total);
-      setTotalPages(res.total_pages || 1); // Ensure we have at least 1 page
+      setTotalPages(res.total_pages || 1);
       setPaginatedError(null);
     } catch (err) {
       console.error("Error fetching paginated telemetry:", err);
       setPaginatedError(err.message);
     } finally {
-        setPaginatedLoading(false);
+      setPaginatedLoading(false);
     }
   }, [page, limit, filters]);
 
@@ -59,84 +66,71 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20) => {
     fetchData(page);
   }, [fetchData, page]);
 
-  // Set up WebSocket for real-time updates
+  // Effect to handle real-time updates via WebSocket
   useEffect(() => {
-    // Only use WebSocket updates on the first page and when not paused
-    if (page !== 1 || pauseRealtimeUpdates) return;
+    // Only subscribe if real-time updates are active
+    if (!isRealtimeActive()) return;
     
-    // Subscribe to telemetry updates via WebSocket
     const unsubscribe = subscribeTelemetry((newTelemetry) => {
-      // Only update if real-time updates are not paused
-      if (!pauseRealtimeUpdates) {
-        // Only if we're on the first page and don't have active time filters
-        if (page === 1 && !filters.startTime && !filters.endTime) {
-          // Check if we should include this item based on anomaly filters
-          let shouldInclude = true;
-          
-          if (filters.anomaly !== null) {
-            if (filters.anomaly === true) {
-              // Check for any anomaly or specific anomaly type
-              if (filters.anomalyType) {
-                // Filter by specific anomaly type
-                switch (filters.anomalyType) {
-                  case 'temperature':
-                    shouldInclude = newTelemetry.TemperatureAnomaly;
-                    break;
-                  case 'battery':
-                    shouldInclude = newTelemetry.BatteryAnomaly;
-                    break;
-                  case 'altitude':
-                    shouldInclude = newTelemetry.AltitudeAnomaly;
-                    break;
-                  case 'signal':
-                    shouldInclude = newTelemetry.SignalAnomaly;
-                    break;
-                  default:
-                    shouldInclude = newTelemetry.Anomaly;
-                }
-              } else {
-                // Filter by any anomaly
-                shouldInclude = newTelemetry.Anomaly;
-              }
-            } else {
-              // Filter by no anomalies
-              shouldInclude = !newTelemetry.Anomaly;
+      // Check if we should include this item based on anomaly filters
+      let shouldInclude = true;
+      
+      if (filters.anomaly !== null) {
+        const hasAnomaly = newTelemetry.AnomalyFlags > 0;
+        
+        if (filters.anomaly === true) {
+          // We want items with anomalies
+          if (filters.anomalyType) {
+            // Filter by specific anomaly type
+            switch (filters.anomalyType) {
+              case 'temperature':
+                shouldInclude = (newTelemetry.AnomalyFlags & 1) !== 0;
+                break;
+              case 'battery':
+                shouldInclude = (newTelemetry.AnomalyFlags & 2) !== 0;
+                break;
+              case 'altitude':
+                shouldInclude = (newTelemetry.AnomalyFlags & 4) !== 0;
+                break;
+              case 'signal':
+                shouldInclude = (newTelemetry.AnomalyFlags & 8) !== 0;
+                break;
+              default:
+                shouldInclude = hasAnomaly;
             }
+          } else {
+            // Any anomaly
+            shouldInclude = hasAnomaly;
           }
-            
-          if (shouldInclude) {
-            setPaginatedData(prevData => {
-              // Create a new array with the new telemetry at the beginning
-              const updatedData = [newTelemetry, ...prevData.slice(0, limit - 1)];
-              return updatedData;
-            });
-            
-            // Increment total count
-            setTotal(prevTotal => prevTotal + 1);
-            
-            // Recalculate total pages if needed
-            const newTotalPages = Math.ceil((total + 1) / limit);
-            if (newTotalPages !== totalPages) {
-              setTotalPages(newTotalPages);
-            }
-          }
+        } else {
+          // We want items WITHOUT anomalies
+          shouldInclude = !hasAnomaly;
         }
+      }
+        
+      if (shouldInclude) {
+        setPaginatedData(prevData => {
+          // Create a new array with the new telemetry at the beginning
+          return [newTelemetry, ...prevData.slice(0, limit - 1)];
+        });
+        
+        // Increment total count
+        setTotal(prevTotal => prevTotal + 1);
+        
+        // Recalculate total pages if needed
+        setTotalPages(current => Math.max(current, Math.ceil((total + 1) / limit)));
       }
     });
     
-    return () => {
-      unsubscribe(); // Clean up WebSocket listener
-    };
-  }, [page, limit, filters, total, totalPages, pauseRealtimeUpdates]);
+    return unsubscribe;
+  }, [isRealtimeActive, filters, total, limit]);
 
   // Method to update filters
   const updateFilters = useCallback((newFilters) => {
-    console.log("Updating filters:", newFilters);
-    
     // If page is specified in the new filters, update it separately
     if (newFilters.page !== undefined) {
       setPage(newFilters.page);
-      // Remove page from newFilters to avoid it being added to filters state
+      // Remove page from newFilters
       const { page: _, ...filtersWithoutPage } = newFilters;
       newFilters = filtersWithoutPage;
     }
@@ -147,13 +141,20 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20) => {
     }));
   }, []);
 
-  // Toggle pause real-time updates
-  const setPauseUpdates = useCallback((shouldPause) => {
-    setPauseRealtimeUpdates(shouldPause);
-  }, []);
+  // Effects to pause real-time updates when certain conditions change
+  useEffect(() => {
+    // Automatically pause updates when not on page 1
+    if (page !== 1) {
+      setPauseRealtimeUpdates(true);
+    }
+  }, [page]);
 
-  // Check if real-time updates are active
-  const isRealtimeActive = page === 1 && !filters.startTime && !filters.endTime && !pauseRealtimeUpdates;
+  useEffect(() => {
+    // Pause updates when time filters are active
+    if (filters.startTime || filters.endTime) {
+      setPauseRealtimeUpdates(true);
+    }
+  }, [filters.startTime, filters.endTime]);
 
   return {
     paginatedData,
@@ -166,8 +167,8 @@ const usePaginatedTelemetry = (initialPage = 1, limit = 20) => {
     filters,
     updateFilters,
     refreshData: fetchData,
-    setPauseUpdates,
-    isRealtimeActive
+    setPauseUpdates: setPauseRealtimeUpdates,
+    isRealtimeActive: isRealtimeActive()
   };
 };
 
